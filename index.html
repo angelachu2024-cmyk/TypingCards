@@ -1147,7 +1147,7 @@
             body: JSON.stringify(payload)
           });
           if (!res.ok) throw new Error("請求失敗：" + res.status);
-          console.log("res.json",res.json());
+          console.log("res",res);
           var json = await res.json();
           if (!json.ok) throw new Error(json.error || "雲端回傳失敗");
           return json;
