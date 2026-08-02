@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中文打字字卡訓練器 · 學生</title>
+  <script src="dict-data.js"></script>
+  <style>
+    /* ===== 完整樣式（已精簡） ===== */
+    :root {
+      --bg: #f6f7f9;
+      --card: #ffffff;
+      --ink: #1e2a2f;
+      --muted: #63717a;
+      --accent: #0f766e;
+      --accent-2: #f59e0b;
+      --danger: #dc2626;
+      --ok: #15803d;
+      --line: #dbe1e6;
+      --shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 15% 10%, rgba(15, 118, 110, 0.08), transparent 40%), radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.10), transparent 35%), var(--bg);
+      color: var(--ink);
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 16px 10px 28px;
+    }
+    .app { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 12px; }
+    .panel { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid rgba(15,23,42,0.03); overflow: hidden; }
+    .header { padding: 16px 14px 10px; background: linear-gradient(120deg, #f0fdfa, #fff8eb 58%, #ffffff); border-bottom: 1px solid var(--line); }
+    .title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    h1 { margin: 0; font-size: 1.18rem; letter-spacing: 0.5px; }
+    .tabs { display: flex; border-top: 1px solid var(--line); }
+    .tab-btn { flex: 1; border: 0; background: #fff; padding: 11px 10px; font-size: 15px; color: var(--muted); border-right: 1px solid var(--line); cursor: pointer; }
+    .tab-btn:last-child { border-right: 0; }
+    .tab-btn.active { color: var(--accent); font-weight: 700; background: #ecfdfb; }
+    .section { padding: 14px; animation: fadeUp 250ms ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .hidden { display: none !important; }
+    .mode-switch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+    .mode-btn { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 10px 8px; font-size: 14px; color: #2d3d45; font-weight: 600; cursor: pointer; }
+    .mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 6px 14px rgba(15,118,110,0.25); }
+    .category-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+    .category-bar select { flex: 1; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; background: #fff; font-size: 13px; font-weight: 600; color: #334155; outline: none; cursor: pointer; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .stat { background: #f7fafc; border: 1px solid var(--line); border-radius: 10px; padding: 8px 6px; text-align: center; }
+    .stat .num { font-size: 18px; font-weight: 700; color: #0f172a; line-height: 1.2; }
+    .stat .label { font-size: 12px; color: var(--muted); }
+    .review-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+    .review-row .scope-group { display: flex; gap: 6px; flex: 1; }
+    .review-row .scope-btn { border: 1px solid var(--line); border-radius: 999px; padding: 8px 6px; background: #f8fafc; color: #334155; font-size: 12px; font-weight: 700; cursor: pointer; flex: 1; text-align: center; }
+    .review-row .scope-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .review-row .reset-btn { border: 1px solid var(--danger); border-radius: 999px; padding: 8px 12px; background: #fff; color: var(--danger); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .flashcard { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 16px; background: linear-gradient(135deg, #ffffff, #fafafa); text-align: center; min-height: 170px; display: flex; flex-direction: column; justify-content: center; gap: 6px; margin-bottom: 10px; }
+    .char { font-size: 64px; line-height: 1; font-weight: 700; letter-spacing: 2px; }
+    .exp { font-size: 14px; color: var(--muted); min-height: 20px; }
+    .input-box { border: 2px solid #d6dde3; border-radius: 12px; min-height: 46px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 8px 10px; font-size: 26px; font-weight: 700; letter-spacing: 2px; margin-bottom: 8px; transition: border-color 180ms ease; word-break: break-all; }
+    .input-box.focus { border-color: var(--accent); }
+    .result-box { border: 1px dashed var(--line); border-radius: 10px; min-height: 52px; padding: 8px 10px; font-size: 14px; color: #334155; margin-bottom: 8px; }
+    .result-box.ok { border-color: rgba(21,128,61,0.35); background: rgba(21,128,61,0.08); color: #166534; }
+    .result-box.err { border-color: rgba(220,38,38,0.35); background: rgba(220,38,38,0.09); color: #991b1b; }
+    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .btn { border: 0; border-radius: 12px; padding: 12px 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+    .btn.primary { background: var(--accent); color: #fff; }
+    .btn.secondary { background: #edf2f7; color: #334155; }
+    .btn.warning { background: var(--accent-2); color: #1f2937; }
+    .btn.danger { background: #ef4444; color: #fff; }
+    .btn.soft-ok { background: #22c55e; color: #fff; }
+    .btn.soft-no { background: #f97316; color: #fff; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .keyboard { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px; background: #f8fafc; display: grid; gap: 7px; }
+    .kb-row { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+    .kb-key { border: 1px solid #cfd8e3; border-radius: 10px; min-height: 47px; background: #fff; color: #0f172a; font-weight: 700; font-size: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: pointer; user-select: none; }
+    .kb-key .shape { font-size: 16px; line-height: 1; }
+    .kb-key:active { transform: scale(0.97); background: #eef6ff; }
+    .kb-control-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 4px; }
+    .warn-box { border: 1px solid rgba(217,119,6,0.3); background: rgba(245,158,11,0.12); color: #92400e; border-radius: 10px; padding: 8px 10px; font-size: 13px; margin-bottom: 10px; }
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 13px; color: #475569; margin-bottom: 4px; font-weight: 700; }
+    input[type="text"], input[type="password"] { width: 100%; border: 1px solid #cfd8e3; border-radius: 10px; padding: 10px 11px; font-size: 14px; background: #fff; color: #1f2937; }
+    select { width: 100%; border: 1px solid #cfd8e3; border-radius: 10px; padding: 10px 11px; font-size: 14px; background: #fff; color: #1f2937; }
+    .history-card { border: 1px solid var(--line); border-radius: 12px; background: #f8fafc; padding: 10px; margin-bottom: 10px; }
+    .history-title { font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px; }
+    .history-list { display: grid; gap: 6px; }
+    .history-item { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 7px 8px; border-radius: 10px; background: #fff; font-size: 12px; color: #334155; }
+    .history-item.ok { border-left: 3px solid #22c55e; }
+    .history-item.err { border-left: 3px solid #f97316; }
+    .history-item .meta { color: #64748b; font-size: 11px; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+    .history-empty { color: #64748b; font-size: 12px; padding: 6px 0; }
+    .footer-note { text-align: center; color: #64748b; font-size: 12px; padding-bottom: 8px; }
+    .spinner-wrap { position: fixed; inset: 0; background: rgba(255,255,255,0.78); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .spinner-wrap.show { display: flex; }
+    .spinner { width: 58px; height: 58px; border: 6px solid #c5e2df; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.54); z-index: 900; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .overlay-card { width: 100%; max-width: 420px; background: #fff; border-radius: 16px; padding: 16px; box-shadow: var(--shadow); }
+    .overlay-card h2 { margin: 0 0 8px; font-size: 20px; }
+    .overlay-card p { margin: 0 0 10px; color: #475569; font-size: 14px; line-height: 1.55; }
+    .overlay-card .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+    .logout-btn { cursor: pointer; border: 1px solid var(--danger); color: var(--danger); background: #fff; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; transition: background 0.2s; }
+    .logout-btn:hover { background: #fee2e2; }
+    @media (max-width: 360px) { .kb-row { grid-template-columns: repeat(5, 1fr); } .char { font-size: 54px; } .mode-btn { font-size: 13px; } .category-bar select { font-size: 12px; padding: 4px 10px; } .overlay-card .row3 { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="panel">
+      <div class="header">
+        <div class="title-row">
+          <h1>中文打字字卡訓練器</h1>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div id="studentLabel" class="chip" style="font-size:12px;border-radius:999px;padding:5px 10px;border:1px solid var(--line);background:#fff;color:var(--muted);">未登入</div>
+            <button id="logoutBtn" class="logout-btn" style="display:none;">登出</button>
+          </div>
+        </div>
+        <!-- 已移除 chips 列（API 已設定、線上、已同步） -->
+      </div>
+      <div class="tabs">
+        <button id="tabPractice" class="tab-btn active">練習</button>
+        <button id="tabHistory" class="tab-btn">紀錄</button>
+      </div>
+
+      <div id="practiceSection" class="section">
+        <div id="offlineWarn" class="warn-box hidden">目前離線，將使用暫存資料。答題進度會自動排隊，待連線恢復後重試同步。</div>
+        <div class="mode-switch">
+          <button class="mode-btn active" data-mode="cangjie">倉頡</button>
+          <button class="mode-btn" data-mode="quick">速成</button>
+          <button class="mode-btn" data-mode="pinyin">拼音</button>
+        </div>
+        <div class="category-bar">
+          <label for="categorySelect" style="font-weight:700;font-size:13px;color:#475569;">分類：</label>
+          <select id="categorySelect"><option value="all">全部</option></select>
+        </div>
+        <div class="stats">
+          <div class="stat"><div id="totalCards" class="num">0</div><div class="label">總字卡</div></div>
+          <div class="stat"><div id="masteredCards" class="num">0</div><div class="label">已熟練</div></div>
+          <div class="stat"><div id="dueCards" class="num">0</div><div class="label">待複習</div></div>
+        </div>
+
+        <!-- 合併 待複習加強／智慧排序／全部隨機 與 重置分類 -->
+        <div class="review-row">
+          <div class="scope-group">
+            <button class="scope-btn active" data-scope="review">待複習加強</button>
+            <button class="scope-btn" data-scope="smart">智慧排序</button>
+            <button class="scope-btn" data-scope="random">全部隨機</button>
+          </div>
+          <button id="resetCategoryBtn" class="reset-btn">重置分類</button>
+        </div>
+
+        <div class="flashcard" id="flashcard">
+          <div id="cardCharacter" class="char">字</div>
+          <div id="cardExplanation" class="exp"> </div>
+        </div>
+        <div id="typedDisplay" class="input-box"> </div>
+        <div id="resultBox" class="result-box">請使用下方虛擬鍵盤輸入，完成後按送出。</div>
+        <div class="action-row">
+          <button id="knowBtn" class="btn soft-ok" disabled>認識 (J)</button>
+          <button id="dontKnowBtn" class="btn soft-no" disabled>不認識 (K)</button>
+        </div>
+        <div id="keyboardWrap" class="keyboard"></div>
+      </div>
+
+      <div id="historySection" class="section hidden">
+        <div class="history-card">
+          <div class="history-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>錯誤紀錄（每個字僅顯示最近一次）</span>
+            <button id="clearAllHistoryBtn" class="btn danger" style="padding:4px 12px;font-size:12px;">清除全部</button>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-note">手機優先設計，建議直向使用。</div>
+  </div>
+
+  <div id="spinnerWrap" class="spinner-wrap"><div class="spinner" aria-label="loading"></div></div>
+
+  <!-- 登入彈窗 -->
+  <div id="studentOverlay" class="overlay">
+    <div class="overlay-card">
+      <h2>歡迎使用</h2>
+      <p>請選擇班級與學號，並輸入密碼登入。</p>
+      <div class="row3">
+        <div class="field" style="margin:0;">
+          <label>Form</label>
+          <select id="formSelect">
+            <option value="F1">F1</option><option value="F2">F2</option><option value="F3">F3</option>
+            <option value="F4">F4</option><option value="F5">F5</option><option value="F6">F6</option>
+            <option value="TT">TT</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0;">
+          <label>Class</label>
+          <select id="classSelect">
+            <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+            <option value="D">D</option><option value="TT">TT</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0;">
+          <label>Number</label>
+          <select id="numberSelect"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>密碼</label>
+        <input id="passwordInput" type="password" placeholder="預設 11111111" />
+      </div>
+      <button id="saveStudentBtn" class="btn primary">登入</button>
+      <div class="small" style="margin-top:8px;">預設密碼為 11111111</div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      "use strict";
+
+      // ========== 同步參數 ==========
+      var SYNC_INTERVAL = 60000;
+
+      // ========== 內建字典 ==========
+      if (typeof window.BUILTIN_DICT === 'undefined') {
+        console.warn("未找到 BUILTIN_DICT，請確認 dict-data.js 已載入");
+        var BUILTIN_DICT = {};
+      } else {
+        var BUILTIN_DICT = window.BUILTIN_DICT;
+      }
+
+      var STORAGE_DECK_CACHE = "typingTrainer_deck_cache";
+      var STORAGE_PROGRESS_CACHE = "typingTrainer_progress_cache";
+      var STORAGE_HISTORY_CACHE = "typingTrainer_history_cache";
+      var STORAGE_MODE = "typingTrainer_mode";
+      var COOKIE_STUDENT = "typingTrainer_student_id";
+
+      var CANGJIE_MAP = {
+        A: "日", B: "月", C: "金", D: "木", E: "水", F: "火", G: "土",
+        H: "竹", I: "戈", J: "十", K: "大", L: "中", M: "一", N: "弓",
+        O: "人", P: "心", Q: "手", R: "口", S: "尸", T: "廿", U: "山",
+        V: "女", W: "田", X: "難", Y: "卜", Z: "重"
+      };
+      var CANGJIE_REVERSE = {};
+      Object.keys(CANGJIE_MAP).forEach(function(k) {
+        CANGJIE_REVERSE[CANGJIE_MAP[k]] = k;
+      });
+
+      var KEYBOARD_ROWS = [
+        ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+        ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+        ["Z", "X", "C", "V", "B", "N", "M"]
+      ];
+
+      // ========== 狀態 ==========
+      var state = {
+        mode: "cangjie",
+        studentId: "",
+        serverApiUrl: "",
+        cards: [],
+        filteredCards: [],
+        progressMap: {},
+        currentCard: null,
+        typed: "",
+        lastCheck: null,
+        sessionReviewQueue: [],
+        reviewScope: "review",
+        history: [],
+        selectedCategory: "all",
+        allCategories: [],
+        categoryCardCount: {},
+        historyDirty: false,
+        historyUnsyncedCount: 0
+      };
+
+      // ========== DOM 元素 ==========
+      var el = {
+        tabPractice: document.getElementById("tabPractice"),
+        tabHistory: document.getElementById("tabHistory"),
+        practiceSection: document.getElementById("practiceSection"),
+        historySection: document.getElementById("historySection"),
+        offlineWarn: document.getElementById("offlineWarn"),
+        studentLabel: document.getElementById("studentLabel"),
+        logoutBtn: document.getElementById("logoutBtn"),
+        modeBtns: [].slice.call(document.querySelectorAll(".mode-btn")),
+        totalCards: document.getElementById("totalCards"),
+        masteredCards: document.getElementById("masteredCards"),
+        dueCards: document.getElementById("dueCards"),
+        cardCharacter: document.getElementById("cardCharacter"),
+        // 移除 cardExplanation 引用（但保留元素，或可隱藏）
+        // 此處我們保留但不再使用
+        typedDisplay: document.getElementById("typedDisplay"),
+        resultBox: document.getElementById("resultBox"),
+        knowBtn: document.getElementById("knowBtn"),
+        dontKnowBtn: document.getElementById("dontKnowBtn"),
+        keyboardWrap: document.getElementById("keyboardWrap"),
+        categorySelect: document.getElementById("categorySelect"),
+        resetCategoryBtn: document.getElementById("resetCategoryBtn"),
+        spinnerWrap: document.getElementById("spinnerWrap"),
+        studentOverlay: document.getElementById("studentOverlay"),
+        formSelect: document.getElementById("formSelect"),
+        classSelect: document.getElementById("classSelect"),
+        numberSelect: document.getElementById("numberSelect"),
+        passwordInput: document.getElementById("passwordInput"),
+        saveStudentBtn: document.getElementById("saveStudentBtn"),
+        scopeBtns: [].slice.call(document.querySelectorAll(".scope-btn")),
+        historyList: document.getElementById("historyList"),
+        clearAllHistoryBtn: document.getElementById("clearAllHistoryBtn")
+      };
+
+      // 動態產生 Number 下拉選項
+      (function() {
+        for (var i = 1; i <= 40; i++) {
+          var opt = document.createElement("option");
+          opt.value = String(i).padStart(2, "0");
+          opt.textContent = opt.value;
+          el.numberSelect.appendChild(opt);
+        }
+      })();
+
+      var loadingCount = 0;
+
+      function showSpinner() {
+        loadingCount += 1;
+        if (loadingCount > 0) el.spinnerWrap.classList.add("show");
+      }
+      function hideSpinner() {
+        loadingCount = Math.max(0, loadingCount - 1);
+        if (loadingCount === 0) el.spinnerWrap.classList.remove("show");
+      }
+
+      // ========== 工具函數 ==========
+      function setOnlineChip() {
+        if (navigator.onLine) {
+          el.offlineWarn.classList.add("hidden");
+        } else {
+          el.offlineWarn.classList.remove("hidden");
+        }
+      }
+
+      function toast(msg, kind) {
+        el.resultBox.textContent = msg;
+        el.resultBox.classList.remove("ok", "err");
+        if (kind === "ok") el.resultBox.classList.add("ok");
+        if (kind === "err") el.resultBox.classList.add("err");
+      }
+
+      function setCookie(name, value, days) {
+        var d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = name + "=" + encodeURIComponent(value) + ";expires=" + d.toUTCString() + ";path=/";
+      }
+      function getCookie(name) {
+        var n = name + "=";
+        var parts = document.cookie.split(";");
+        for (var i = 0; i < parts.length; i++) {
+          var c = parts[i].trim();
+          if (c.indexOf(n) === 0) return decodeURIComponent(c.substring(n.length));
+        }
+        return "";
+      }
+      function deleteCookie(name) {
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
+      }
+
+      function sanitizeText(s) {
+        return String(s || "").replace(/\s+/g, " ").trim();
+      }
+      function removePinyinTones(s) {
+        var map = {
+          "ā": "a", "á": "a", "ǎ": "a", "à": "a",
+          "ē": "e", "é": "e", "ě": "e", "è": "e",
+          "ī": "i", "í": "i", "ǐ": "i", "ì": "i",
+          "ō": "o", "ó": "o", "ǒ": "o", "ò": "o",
+          "ū": "u", "ú": "u", "ǔ": "u", "ù": "u",
+          "ǖ": "u", "ǘ": "u", "ǚ": "u", "ǜ": "u", "ü": "u"
+        };
+        var out = "";
+        for (var i = 0; i < s.length; i++) {
+          out += map[s[i]] || s[i];
+        }
+        return out;
+      }
+      function lettersToCangjieShapes(s) {
+        var str = String(s || "").toUpperCase();
+        var out = "";
+        for (var i = 0; i < str.length; i++) {
+          var ch = str[i];
+          if (CANGJIE_MAP[ch]) out += CANGJIE_MAP[ch];
+          else if (/[\u4E00-\u9FFF]/.test(ch)) out += ch;
+        }
+        return out;
+      }
+      function normalizeCode(mode, value) {
+        var v = String(value || "").trim();
+        if (mode === "pinyin") {
+          v = v.toLowerCase();
+          v = removePinyinTones(v);
+          v = v.replace(/[^a-z]/g, "");
+          return v;
+        }
+        v = lettersToCangjieShapes(v);
+        v = v.replace(/[^\u4E00-\u9FFF]/g, "");
+        return v;
+      }
+      function deriveQuick(cangjie) {
+        var n = normalizeCode("cangjie", cangjie);
+        if (!n) return "";
+        if (n.length <= 2) return n;
+        return n[0] + n[n.length - 1];
+      }
+      function expectedCodeOf(card, mode) {
+        if (!card) return "";
+        if (mode === "pinyin") return normalizeCode("pinyin", card.pinyin || "");
+        if (mode === "quick") {
+          var q = card.quick || deriveQuick(card.cangjie || "");
+          return normalizeCode("quick", q);
+        }
+        return normalizeCode("cangjie", card.cangjie || "");
+      }
+
+      function renderTyped() {
+        el.typedDisplay.textContent = state.typed || " ";
+      }
+
+      function getTodayIso() {
+        return new Date().toISOString();
+      }
+      function toMs(iso) {
+        var t = Date.parse(iso);
+        return isNaN(t) ? 0 : t;
+      }
+      function isDue(record) {
+        if (!record || !record.nextReviewAt) return false;
+        return toMs(record.nextReviewAt) <= Date.now();
+      }
+
+      function isMasteredRecord(record) {
+        if (!record) return false;
+        return Number(record.consecutiveCorrect || 0) >= 3;
+      }
+
+      function getCardProgress(character) {
+        return state.progressMap[character] || null;
+      }
+      function uniqueChars(arr) {
+        var seen = {};
+        var out = [];
+        arr.forEach(function(x) {
+          if (!seen[x]) { seen[x] = true; out.push(x); }
+        });
+        return out;
+      }
+      function formatHistoryTime(iso) {
+        var d = new Date(iso || Date.now());
+        if (isNaN(d.getTime())) return "";
+        return d.toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      }
+
+      // ========== 進度快取 ==========
+      function getProgressCacheKey() {
+        return STORAGE_PROGRESS_CACHE + '_' + state.studentId;
+      }
+      function loadProgressFromCache() {
+        if (!state.studentId) return null;
+        try {
+          var raw = localStorage.getItem(getProgressCacheKey());
+          if (!raw) return null;
+          var obj = JSON.parse(raw);
+          return obj && typeof obj === 'object' ? obj : null;
+        } catch (e) { return null; }
+      }
+      function saveProgressToCache(progressMap) {
+        if (!state.studentId) return;
+        try {
+          localStorage.setItem(getProgressCacheKey(), JSON.stringify(progressMap));
+        } catch (e) { /* ignore */ }
+      }
+
+      // ========== 歷史快取 ==========
+      function getHistoryCacheKey() {
+        return STORAGE_HISTORY_CACHE + '_' + state.studentId;
+      }
+      function loadHistoryFromCache() {
+        if (!state.studentId) return null;
+        try {
+          var raw = localStorage.getItem(getHistoryCacheKey());
+          if (!raw) return null;
+          var arr = JSON.parse(raw);
+          return Array.isArray(arr) ? arr : null;
+        } catch (e) { return null; }
+      }
+      function saveHistoryToCache(history) {
+        if (!state.studentId) return;
+        try {
+          localStorage.setItem(getHistoryCacheKey(), JSON.stringify(history.slice(0, 10)));
+        } catch (e) { /* ignore */ }
+      }
+
+      // ========== 即時同步進度 ==========
+      function syncProgressImmediately(record) {
+        if (!record || !record.character || !state.studentId || !state.serverApiUrl) return;
+        var payload = {
+          action: 'saveProgress',
+          studentId: state.studentId,
+          record: record
+        };
+        fetch(state.serverApiUrl, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(function(e) {
+          console.warn('即時同步失敗，將保留在快取中', e);
+        });
+        var cache = loadProgressFromCache() || {};
+        cache[record.character] = record;
+        saveProgressToCache(cache);
+      }
+
+      // ========== 歷史記錄（立即同步） ==========
+      async function syncHistoryToServer() {
+        if (!state.studentId || !state.serverApiUrl) return;
+        try {
+          await apiCallPost({
+            action: "saveHistory",
+            studentId: state.studentId,
+            history: state.history.slice(0, 10)
+          }, { silent: true });
+          state.historyDirty = false;
+          state.historyUnsyncedCount = 0;
+          console.log('📤 歷史記錄已同步至伺服器');
+        } catch (e) {
+          console.warn('同步歷史記錄失敗，將保留標記重試', e);
+          state.historyDirty = true;
+        }
+      }
+
+      async function loadHistoryFromServer() {
+        if (!state.studentId || !state.serverApiUrl) return;
+        try {
+          var result = await apiCallGet("getHistory", { studentId: state.studentId });
+          if (result.ok && Array.isArray(result.history)) {
+            state.history = result.history.slice(0, 10);
+            saveHistoryToCache(state.history);
+            state.historyDirty = false;
+            state.historyUnsyncedCount = 0;
+            renderHistory();
+            console.log('📥 歷史記錄已從伺服器載入');
+          }
+        } catch (e) {
+          console.warn("載入歷史記錄失敗，嘗試使用本地快取", e);
+          var cached = loadHistoryFromCache();
+          if (cached && cached.length) {
+            state.history = cached;
+            renderHistory();
+            await syncHistoryToServer();
+          } else {
+            state.history = [];
+            renderHistory();
+          }
+        }
+      }
+
+      // 只顯示答錯記錄，每個字只顯示最近一次
+      function renderHistory() {
+        var errorEntries = state.history.filter(function(entry) {
+          return entry.result === '答錯';
+        });
+        var seen = {};
+        var uniqueErrors = [];
+        errorEntries.forEach(function(entry) {
+          if (!seen[entry.character]) {
+            seen[entry.character] = true;
+            uniqueErrors.push(entry);
+          }
+        });
+
+        if (!uniqueErrors.length) {
+          el.historyList.innerHTML = '<div class="history-empty">尚無錯誤紀錄</div>';
+          return;
+        }
+
+        el.historyList.innerHTML = "";
+        uniqueErrors.forEach(function(entry) {
+          var row = document.createElement("div");
+          row.className = "history-item err";
+          var left = document.createElement("div");
+          var codeText = '';
+          if (entry.cangjie) codeText += ' 倉:' + entry.cangjie;
+          if (entry.quick) codeText += ' 速:' + entry.quick;
+          if (entry.pinyin) codeText += ' 拼:' + entry.pinyin;
+          left.innerHTML = '<strong>' + entry.character + '</strong> · ' + entry.result +
+                          ' <span style="font-size:11px;color:#888;">' + codeText + '</span>';
+
+          var right = document.createElement("div");
+          right.className = "meta";
+          right.textContent = formatHistoryTime(entry.at);
+
+          var delBtn = document.createElement("button");
+          delBtn.textContent = "✕";
+          delBtn.className = "btn danger";
+          delBtn.style.padding = "0 6px";
+          delBtn.style.fontSize = "12px";
+          delBtn.style.marginLeft = "6px";
+          delBtn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            if (confirm("確定刪除此筆紀錄？")) {
+              var idx = state.history.findIndex(function(item) {
+                return item.character === entry.character && item.at === entry.at;
+              });
+              if (idx !== -1) {
+                state.history.splice(idx, 1);
+                saveHistoryToCache(state.history);
+                renderHistory();
+                syncHistoryToServer();
+              }
+            }
+          });
+          right.appendChild(delBtn);
+          row.appendChild(left);
+          row.appendChild(right);
+          el.historyList.appendChild(row);
+        });
+      }
+
+      function clearAllHistory() {
+        if (!state.history.length) { toast("目前沒有紀錄可清除", ""); return; }
+        if (confirm("確定清除所有歷史紀錄？")) {
+          state.history = [];
+          saveHistoryToCache(state.history);
+          renderHistory();
+          syncHistoryToServer();
+          toast("已清除所有紀錄", "ok");
+        }
+      }
+
+      function pushHistoryEntry(character, result, card) {
+        if (!character) return;
+        var entry = {
+          character: character,
+          result: result,
+          at: new Date().toISOString(),
+          cangjie: card ? (card.cangjie || '') : '',
+          quick: card ? (card.quick || '') : '',
+          pinyin: card ? (card.pinyin || '') : ''
+        };
+        state.history.unshift(entry);
+        if (state.history.length > 20) state.history.pop();
+        saveHistoryToCache(state.history);
+        renderHistory();
+        syncHistoryToServer();
+      }
+
+      // ========== 虛擬鍵盤 ==========
+      function createKey(letter, shape) {
+        var b = document.createElement("button");
+        b.className = "kb-key";
+        b.type = "button";
+        var top = document.createElement("div");
+        top.textContent = letter;
+        var bottom = document.createElement("div");
+        bottom.className = "shape";
+        bottom.textContent = shape || "";
+        b.appendChild(top);
+        b.appendChild(bottom);
+        return b;
+      }
+
+      function renderKeyboard() {
+        el.keyboardWrap.innerHTML = "";
+        KEYBOARD_ROWS.forEach(function(row) {
+          var r = document.createElement("div");
+          r.className = "kb-row";
+          row.forEach(function(letter) {
+            var shape = state.mode === "pinyin" ? "" : (CANGJIE_MAP[letter] || "");
+            var key = createKey(letter, shape);
+            key.addEventListener("click", function() {
+              if (state.lastCheck) return;
+              if (state.mode === "pinyin") state.typed += letter.toLowerCase();
+              else state.typed += shape;
+              renderTyped();
+              el.typedDisplay.classList.add("focus");
+              setTimeout(function() { el.typedDisplay.classList.remove("focus"); }, 120);
+            });
+            r.appendChild(key);
+          });
+          el.keyboardWrap.appendChild(r);
+        });
+
+        var ctrl = document.createElement("div");
+        ctrl.className = "kb-control-row";
+        var back = document.createElement("button");
+        back.className = "btn secondary";
+        back.type = "button";
+        back.textContent = "退格";
+        back.addEventListener("click", function() {
+          if (state.lastCheck) return;
+          state.typed = state.typed.slice(0, -1);
+          renderTyped();
+        });
+        var clear = document.createElement("button");
+        clear.className = "btn secondary";
+        clear.type = "button";
+        clear.textContent = "清除";
+        clear.addEventListener("click", function() {
+          if (state.lastCheck) return;
+          state.typed = "";
+          renderTyped();
+        });
+        var submit = document.createElement("button");
+        submit.className = "btn primary";
+        submit.type = "button";
+        submit.textContent = "送出";
+        submit.addEventListener("click", submitAnswer);
+        ctrl.appendChild(back);
+        ctrl.appendChild(clear);
+        ctrl.appendChild(submit);
+        el.keyboardWrap.appendChild(ctrl);
+      }
+
+      // ========== 物理鍵盤 ==========
+      function handleKeyDown(e) {
+        var key = e.key;
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+        if (key === ' ') {
+          e.preventDefault();
+          submitAnswer();
+          return;
+        }
+
+        if (state.lastCheck) {
+          if (key === 'j' || key === 'J') {
+            e.preventDefault();
+            el.knowBtn.click();
+            return;
+          }
+          if (key === 'k' || key === 'K') {
+            e.preventDefault();
+            el.dontKnowBtn.click();
+            return;
+          }
+          return;
+        }
+
+        if (key === 'Backspace') {
+          e.preventDefault();
+          state.typed = state.typed.slice(0, -1);
+          renderTyped();
+          return;
+        }
+        if (key === 'Enter') {
+          e.preventDefault();
+          submitAnswer();
+          return;
+        }
+
+        if (/^[a-zA-Z]$/.test(key)) {
+          e.preventDefault();
+          var upper = key.toUpperCase();
+          if (state.mode === 'pinyin') {
+            state.typed += key.toLowerCase();
+          } else {
+            var shape = CANGJIE_MAP[upper];
+            if (shape) state.typed += shape;
+          }
+          renderTyped();
+          el.typedDisplay.classList.add("focus");
+          setTimeout(function() { el.typedDisplay.classList.remove("focus"); }, 120);
+        }
+      }
+
+      // ========== 複習佇列 ==========
+      function queueForSessionReview(character) {
+        if (!character) return;
+        if (state.sessionReviewQueue.indexOf(character) === -1) {
+          state.sessionReviewQueue.push(character);
+        }
+      }
+
+      function popSessionReviewCard(avoidChar) {
+        while (state.sessionReviewQueue.length > 0) {
+          var ch = state.sessionReviewQueue.shift();
+          if (avoidChar && ch === avoidChar) {
+            if (state.sessionReviewQueue.length === 0) return null;
+            continue;
+          }
+          var found = state.filteredCards.find(function(c) { return c.character === ch; });
+          if (found) return found;
+        }
+        return null;
+      }
+
+      function chooseNextCard() {
+        var pool = state.filteredCards;
+        if (!pool.length) {
+          state.currentCard = null;
+          el.cardCharacter.textContent = "無";
+          // 不再顯示說明
+          return;
+        }
+
+        var currentChar = state.currentCard ? state.currentCard.character : null;
+        var fromSessionQueue = popSessionReviewCard(currentChar);
+        if (fromSessionQueue) {
+          state.currentCard = fromSessionQueue;
+          return;
+        }
+
+        var due = [],
+          newer = [],
+          future = [];
+        pool.forEach(function(card) {
+          var rec = getCardProgress(card.character);
+          if (!rec) newer.push(card);
+          else if (isDue(rec)) due.push(card);
+          else future.push({ card: card, t: toMs(rec.nextReviewAt) });
+        });
+
+        if (state.reviewScope === "random") {
+          state.currentCard = pool[Math.floor(Math.random() * pool.length)];
+          return;
+        }
+
+        if (due.length > 0) {
+          var filteredDue = due.filter(function(c) { return c.character !== currentChar; });
+          if (filteredDue.length > 0) {
+            filteredDue.sort(function(a, b) {
+              return toMs(state.progressMap[a.character].nextReviewAt) - toMs(state.progressMap[b.character].nextReviewAt);
+            });
+            state.currentCard = filteredDue[0];
+            return;
+          } else if (due.length === 1 && due[0].character === currentChar) {
+            state.currentCard = due[0];
+            return;
+          }
+        }
+
+        if (state.reviewScope === "smart") {
+          var ranked = [];
+          pool.forEach(function(card) {
+            var rec = getCardProgress(card.character);
+            var score = 120;
+            if (!rec) score += 220;
+            else {
+              score += Math.max(0, 120 - Number(rec.repetitions || 0) * 20);
+              score += Math.max(0, 80 - Number(rec.consecutiveCorrect || 0) * 15);
+              if (rec.lastResult === "wrong") score += 90;
+              if (Number(rec.interval || 0) > 0) score -= Math.min(60, Number(rec.interval || 0) * 6);
+            }
+            if (card.character === currentChar) score -= 50;
+            ranked.push({ card: card, score: score });
+          });
+          ranked.sort(function(a, b) { return b.score - a.score; });
+          state.currentCard = ranked[0].card;
+          return;
+        }
+
+        if (newer.length > 0) {
+          var filteredNewer = newer.filter(function(c) { return c.character !== currentChar; });
+          if (filteredNewer.length > 0) {
+            state.currentCard = filteredNewer[Math.floor(Math.random() * filteredNewer.length)];
+            return;
+          } else if (newer.length === 1 && newer[0].character === currentChar) {
+            state.currentCard = newer[0];
+            return;
+          }
+        }
+
+        if (future.length > 0) {
+          future.sort(function(a, b) { return a.t - b.t; });
+          var filteredFuture = future.filter(function(f) { return f.card.character !== currentChar; });
+          if (filteredFuture.length > 0) {
+            state.currentCard = filteredFuture[0].card;
+            return;
+          } else if (future.length === 1 && future[0].card.character === currentChar) {
+            state.currentCard = future[0].card;
+            return;
+          }
+        }
+
+        state.currentCard = pool[Math.floor(Math.random() * pool.length)];
+      }
+
+      function paintCurrentCard() {
+        if (!state.currentCard) {
+          el.cardCharacter.textContent = "無";
+          el.knowBtn.disabled = true;
+          el.dontKnowBtn.disabled = true;
+          state.typed = "";
+          state.lastCheck = null;
+          renderTyped();
+          if (state.studentId) {
+            localStorage.removeItem('lastCard_' + state.studentId);
+          }
+          return;
+        }
+        el.cardCharacter.textContent = state.currentCard.character || "字";
+        state.typed = "";
+        state.lastCheck = null;
+        renderTyped();
+        el.knowBtn.disabled = true;
+        el.dontKnowBtn.disabled = true;
+        if (state.studentId) {
+          localStorage.setItem('lastCard_' + state.studentId, state.currentCard.character);
+        }
+      }
+
+      function updateStats() {
+        var pool = state.filteredCards;
+        var total = pool.length;
+        var mastered = 0,
+          due = 0;
+        pool.forEach(function(card) {
+          var r = getCardProgress(card.character);
+          if (!r) return;
+          if (isMasteredRecord(r)) mastered += 1;
+          if (isDue(r)) due += 1;
+        });
+        if (due === 0) {
+          pool.forEach(function(card) {
+            var r = getCardProgress(card.character);
+            if (r && !isMasteredRecord(r)) due += 1;
+          });
+        }
+        due += state.sessionReviewQueue.length;
+        el.totalCards.textContent = String(total);
+        el.masteredCards.textContent = String(mastered);
+        el.dueCards.textContent = String(due);
+      }
+
+      // ========== 分類 ==========
+      function extractCategoriesFromCards(cards) {
+        var set = {};
+        cards.forEach(function(c) {
+          var cat = (c.category || "未分類").trim() || "未分類";
+          set[cat] = (set[cat] || 0) + 1;
+        });
+        var names = Object.keys(set).sort();
+        var counts = {};
+        names.forEach(function(n) { counts[n] = set[n]; });
+        return { names: names, counts: counts };
+      }
+
+      function populateCategorySelect() {
+        var sel = el.categorySelect;
+        sel.innerHTML = '<option value="all">全部</option>';
+        var cats = state.allCategories;
+        var counts = state.categoryCardCount || {};
+        cats.forEach(function(cat) {
+          var opt = document.createElement("option");
+          opt.value = cat;
+          opt.textContent = cat + " (" + String(counts[cat] || 0).padStart(2, '0') + ")";
+          if (state.selectedCategory === cat) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        if (state.selectedCategory !== "all" && cats.indexOf(state.selectedCategory) === -1) {
+          sel.value = "all";
+          state.selectedCategory = "all";
+        }
+      }
+
+      function selectCategory(cat) {
+        state.selectedCategory = cat;
+        if (cat === "all") {
+          state.filteredCards = state.cards.slice();
+        } else {
+          state.filteredCards = state.cards.filter(function(c) {
+            return (c.category || "未分類") === cat;
+          });
+        }
+        state.sessionReviewQueue = [];
+        el.categorySelect.value = cat;
+        if (state.studentId) {
+          localStorage.setItem('lastCategory_' + state.studentId, cat);
+        }
+        chooseNextCard();
+        paintCurrentCard();
+        updateStats();
+        toast("已切換分類：" + cat, "");
+      }
+
+      function refreshCategoriesAndFilter() {
+        var info = extractCategoriesFromCards(state.cards);
+        state.allCategories = info.names;
+        state.categoryCardCount = info.counts;
+        populateCategorySelect();
+        if (state.selectedCategory !== "all" && state.allCategories.indexOf(state.selectedCategory) === -1) {
+          state.selectedCategory = "all";
+        }
+        selectCategory(state.selectedCategory);
+      }
+
+      // ========== SM-2 ==========
+      function buildDefaultRecord(character) {
+        return {
+          studentId: state.studentId,
+          character: character,
+          ease: 2.5,
+          interval: 0,
+          repetitions: 0,
+          nextReviewAt: new Date().toISOString(),
+          correctCount: 0,
+          wrongCount: 0,
+          consecutiveCorrect: 0,
+          lastResult: "",
+          updatedAt: new Date().toISOString()
+        };
+      }
+
+      function applySM2(record, quality, actuallyCorrect) {
+        var r = JSON.parse(JSON.stringify(record));
+        var q = Math.max(0, Math.min(5, quality));
+        if (actuallyCorrect) {
+          r.correctCount = Number(r.correctCount || 0) + 1;
+          r.consecutiveCorrect = Number(r.consecutiveCorrect || 0) + 1;
+          r.lastResult = "correct";
+        } else {
+          r.wrongCount = Number(r.wrongCount || 0) + 1;
+          r.consecutiveCorrect = 0;
+          r.lastResult = "wrong";
+        }
+        r.ease = Number(r.ease || 2.5);
+        r.interval = Number(r.interval || 0);
+        r.repetitions = Number(r.repetitions || 0);
+        if (q < 3) {
+          r.repetitions = 0;
+          r.interval = 1;
+        } else {
+          r.repetitions += 1;
+          if (r.repetitions === 1) r.interval = 1;
+          else if (r.repetitions === 2) r.interval = 3;
+          else r.interval = Math.max(1, Math.round(r.interval * r.ease));
+        }
+        r.ease = r.ease + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+        if (r.ease < 1.3) r.ease = 1.3;
+        var now = Date.now();
+        var nextMs = now + r.interval * 24 * 60 * 60 * 1000;
+        if (q < 3) nextMs = now + 15 * 60 * 1000;
+        r.nextReviewAt = new Date(nextMs).toISOString();
+        r.updatedAt = getTodayIso();
+        return r;
+      }
+
+      // ========== 答題核心 ==========
+      function studentReadyGuard() {
+        if (!state.studentId) { toast("請先登入", "err"); return false; }
+        if (!state.currentCard) { toast("目前沒有可作答的字卡。", "err"); return false; }
+        return true;
+      }
+
+      function submitAnswer() {
+        if (!studentReadyGuard()) return;
+        if (state.lastCheck) return;
+        var expected = expectedCodeOf(state.currentCard, state.mode);
+        var got = normalizeCode(state.mode, state.typed);
+        var ok = got === expected && expected !== "";
+        state.lastCheck = { ok: ok, expected: expected, got: got };
+        if (ok) {
+          toast("答對。正確碼：" + expected, "ok");
+          el.knowBtn.disabled = false;
+          el.dontKnowBtn.disabled = false;
+        } else {
+          toast("答錯。你輸入：" + (got || "（空）") + "；正確碼：" + (expected || "（未設定）") + "。請按『不認識』", "err");
+          queueForSessionReview(state.currentCard.character);
+          el.knowBtn.disabled = true;
+          el.dontKnowBtn.disabled = false;
+        }
+      }
+
+      function afterAssessment(know) {
+        if (!state.lastCheck) return;
+        if (know && !state.lastCheck.ok) {
+          toast("答錯時請按『不認識』", "err");
+          el.knowBtn.disabled = true;
+          el.dontKnowBtn.disabled = false;
+          return;
+        }
+        el.knowBtn.disabled = true;
+        el.dontKnowBtn.disabled = true;
+        var card = state.currentCard;
+        var wasCorrect = state.lastCheck.ok;
+        var oldRec = getCardProgress(card.character) || buildDefaultRecord(card.character);
+        var actuallyCorrect = wasCorrect;
+        var quality = (actuallyCorrect && know) ? 5 : 2;
+        var newRec = applySM2(oldRec, quality, actuallyCorrect);
+        if (!actuallyCorrect || !know) {
+          queueForSessionReview(card.character);
+        }
+        state.progressMap[card.character] = newRec;
+        syncProgressImmediately(newRec);
+        var outcome = actuallyCorrect ? (know ? "認識" : "不認識") : "答錯";
+        pushHistoryEntry(card.character, outcome, card);
+        chooseNextCard();
+        paintCurrentCard();
+        updateStats();
+        if (state.currentCard && state.currentCard.character === card.character && !wasCorrect) {
+          toast("答錯，再試一次（無其他卡片時）", "err");
+        } else if (!state.currentCard) {
+          toast("沒有更多卡片", "");
+        } else {
+          toast("請輸入後按送出。", "");
+        }
+      }
+
+      // ========== API 呼叫 ==========
+      function buildQuery(params) {
+        var keys = Object.keys(params);
+        if (!keys.length) return "";
+        var pairs = keys.map(function(k) {
+          return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
+        });
+        return "?" + pairs.join("&");
+      }
+
+      async function apiCallGet(action, params) {
+        var api = state.serverApiUrl;
+        if (!api) throw new Error("尚未從伺服器取得 API 位址");
+        var queryObj = params || {};
+        queryObj.action = action;
+        var url = api + buildQuery(queryObj);
+        showSpinner();
+        try {
+          var res = await fetch(url, { method: "GET", mode: "cors" });
+          if (!res.ok) throw new Error("GET 失敗：" + res.status);
+          var json = await res.json();
+          if (!json.ok) throw new Error(json.error || "雲端回傳失敗");
+          return json;
+        } finally {
+          hideSpinner();
+        }
+      }
+
+      async function apiCallPost(payload, options) {
+        var api = state.serverApiUrl;
+        var silent = !!(options && options.silent);
+        if (!api) throw new Error("尚未從伺服器取得 API 位址");
+        if (!silent) showSpinner();
+        try {
+          var res = await fetch(api, {
+            method: "POST",
+            mode: "cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error("POST 失敗：" + res.status);
+          var json = await res.json();
+          if (!json.ok) throw new Error(json.error || "雲端回傳失敗");
+          return json;
+        } finally {
+          if (!silent) hideSpinner();
+        }
+      }
+
+      // ========== 獲取伺服器配置 ==========
+      async function fetchServerConfig() {
+        // var urls = [
+        //   window.location.origin + "?action=getConfig",
+        //   "http://localhost:8088?action=getConfig"
+        // ];
+        // for (var i = 0; i < urls.length; i++) {
+        //   try {
+        //     var res = await fetch(urls[i], { method: "GET", mode: "cors" });
+        //     if (!res.ok) continue;
+        //     var json = await res.json();
+        //     if (json.ok && json.apiUrl !== undefined) {
+        //       state.serverApiUrl = json.apiUrl;
+        //       return true;
+        //     }
+        //   } catch (e) { /* ignore */ }
+        // }
+        // console.warn("獲取配置失敗，使用預設空值");
+        state.serverApiUrl = "https://script.google.com/macros/s/AKfycbyuiEUIns8pJ-9QE58sr2HOwU0ZRUNc1yloY8_tpJWbdtA_vnPumyUT2wYZ4yGN2TTo6w/exec";
+        return true;
+      }
+
+      // ========== 卡片與進度載入 ==========
+      function normalizeCard(raw) {
+        var c = raw || {};
+        var character = sanitizeText(c.character);
+        var category = sanitizeText(c.category) || "未分類";
+        return {
+          character: character,
+          // explanation 不再使用
+          cangjie: sanitizeText(c.cangjie || ""),
+          quick: sanitizeText(c.quick || deriveQuick(c.cangjie || "")),
+          pinyin: sanitizeText(c.pinyin || ""),
+          category: category
+        };
+      }
+
+      function cacheDeck(cards) {
+        state.memoryDeckCache = cards.slice();
+        localStorage.setItem(STORAGE_DECK_CACHE, JSON.stringify(cards));
+      }
+      function readDeckCache() {
+        try {
+          var raw = localStorage.getItem(STORAGE_DECK_CACHE);
+          if (!raw) return [];
+          var arr = JSON.parse(raw);
+          if (!Array.isArray(arr)) return [];
+          return arr.map(normalizeCard).filter(function(c) { return c.character; });
+        } catch (e) { return []; }
+      }
+
+      async function loadCardsAndProgress() {
+        if (!state.studentId) return;
+        var cardsLoaded = false,
+          progressLoaded = false;
+        var prevCategory = state.selectedCategory;
+        var prevCardChar = state.currentCard ? state.currentCard.character : null;
+
+        if (navigator.onLine && state.serverApiUrl) {
+          try {
+            var cardRes = await apiCallGet("getCards");
+            var cards = (cardRes.cards || []).map(normalizeCard).filter(function(c) { return c.character; });
+            state.cards = cards;
+            cacheDeck(cards);
+            cardsLoaded = true;
+          } catch (e1) { console.warn(e1); }
+          try {
+            var pRes = await apiCallGet("getProgress", { studentId: state.studentId });
+            var map = {};
+            (pRes.progress || []).forEach(function(r) {
+              if (r.character) {
+                map[r.character] = {
+                  studentId: state.studentId,
+                  character: String(r.character),
+                  ease: Number(r.ease || 2.5),
+                  interval: Number(r.interval || 0),
+                  repetitions: Number(r.repetitions || 0),
+                  nextReviewAt: String(r.nextReviewAt || ""),
+                  correctCount: Number(r.correctCount || 0),
+                  wrongCount: Number(r.wrongCount || 0),
+                  consecutiveCorrect: Number(r.consecutiveCorrect || 0),
+                  lastResult: String(r.lastResult || ""),
+                  updatedAt: String(r.updatedAt || "")
+                };
+              }
+            });
+            var cache = loadProgressFromCache();
+            if (cache) {
+              for (var ch in cache) {
+                if (cache.hasOwnProperty(ch)) {
+                  var cached = cache[ch];
+                  if (!map[ch] || (cached.updatedAt && cached.updatedAt > map[ch].updatedAt)) {
+                    map[ch] = cached;
+                  }
+                }
+              }
+            }
+            state.progressMap = map;
+            progressLoaded = true;
+          } catch (e2) { console.warn(e2); }
+        }
+        if (!cardsLoaded) {
+          var fallback = state.memoryDeckCache.length ? state.memoryDeckCache : readDeckCache();
+          state.cards = fallback;
+        }
+        if (!progressLoaded && !navigator.onLine) {
+          var cache = loadProgressFromCache();
+          if (cache) {
+            state.progressMap = cache;
+            progressLoaded = true;
+          }
+          toast("離線中，使用本地快取進度。", "err");
+        }
+
+        var info = extractCategoriesFromCards(state.cards);
+        state.allCategories = info.names;
+        state.categoryCardCount = info.counts;
+        populateCategorySelect();
+
+        var savedCat = localStorage.getItem('lastCategory_' + state.studentId);
+        if (savedCat && state.allCategories.indexOf(savedCat) !== -1) {
+          state.selectedCategory = savedCat;
+        } else if (prevCategory && state.allCategories.indexOf(prevCategory) !== -1) {
+          state.selectedCategory = prevCategory;
+        } else {
+          state.selectedCategory = 'all';
+        }
+        if (state.selectedCategory === 'all') {
+          state.filteredCards = state.cards.slice();
+        } else {
+          state.filteredCards = state.cards.filter(function(c) {
+            return (c.category || '未分類') === state.selectedCategory;
+          });
+        }
+        el.categorySelect.value = state.selectedCategory;
+        state.sessionReviewQueue = [];
+
+        await loadHistoryFromServer();
+
+        var savedCard = localStorage.getItem('lastCard_' + state.studentId);
+        if (savedCard) {
+          var found = state.filteredCards.find(function(c) { return c.character === savedCard; });
+          if (found) {
+            state.currentCard = found;
+            paintCurrentCard();
+            updateStats();
+            toast('已恢復卡片：' + found.character, '');
+            return;
+          }
+        }
+        chooseNextCard();
+        paintCurrentCard();
+        updateStats();
+        toast('已載入字卡，開始練習。', '');
+      }
+
+      // ========== 重置分類學習進度 ==========
+      async function resetCategoryProgress() {
+        if (!state.studentId) {
+          toast("請先登入", "err");
+          return;
+        }
+        var category = state.selectedCategory;
+        if (category === 'all') {
+          toast("請先選擇一個具體分類（非「全部」）", "err");
+          return;
+        }
+        if (!confirm("確定要重置「" + category + "」分類的所有學習進度嗎？\n此操作無法復原！")) return;
+        try {
+          var result = await apiCallPost({
+            action: "resetProgress",
+            studentId: state.studentId,
+            category: category
+          });
+          if (result.ok) {
+            toast("已重置「" + category + "」進度，刪除了 " + result.deleted + " 筆記錄。", "ok");
+            var cache = loadProgressFromCache() || {};
+            var toRemove = [];
+            state.cards.forEach(function(card) {
+              if ((card.category || "未分類") === category) {
+                toRemove.push(card.character);
+              }
+            });
+            toRemove.forEach(function(ch) {
+              delete cache[ch];
+            });
+            saveProgressToCache(cache);
+            await loadCardsAndProgress();
+          } else {
+            toast("重置失敗：" + (result.error || "未知錯誤"), "err");
+          }
+        } catch (e) {
+          toast("重置失敗：" + e.message, "err");
+        }
+      }
+
+      // ========== 登出 ==========
+      function logout() {
+        deleteCookie(COOKIE_STUDENT);
+        state.studentId = "";
+        state.progressMap = {};
+        state.cards = [];
+        state.filteredCards = [];
+        state.currentCard = null;
+        state.sessionReviewQueue = [];
+        state.history = [];
+        state.allCategories = [];
+        state.categoryCardCount = {};
+        state.serverApiUrl = "";
+        state.historyDirty = false;
+        state.historyUnsyncedCount = 0;
+        updateStudentLabel();
+        if (el.logoutBtn) el.logoutBtn.style.display = "none";
+        el.studentOverlay.classList.remove("hidden");
+        el.cardCharacter.textContent = "字";
+        el.totalCards.textContent = "0";
+        el.masteredCards.textContent = "0";
+        el.dueCards.textContent = "0";
+        el.typedDisplay.textContent = " ";
+        el.resultBox.textContent = "請先登入";
+        el.resultBox.className = "result-box";
+        switchTab("practice");
+        toast("已登出", "");
+      }
+
+      // ========== 頁籤切換、學生標籤 ==========
+      function updateStudentLabel() {
+        if (state.studentId) {
+          el.studentLabel.textContent = "學生：" + state.studentId;
+          el.studentLabel.className = "chip ok";
+          if (el.logoutBtn) el.logoutBtn.style.display = "inline-block";
+        } else {
+          el.studentLabel.textContent = "未登入";
+          el.studentLabel.className = "chip";
+          if (el.logoutBtn) el.logoutBtn.style.display = "none";
+        }
+      }
+
+      function switchTab(which) {
+        var isPractice = which === "practice";
+        var isHistory = which === "history";
+        el.tabPractice.classList.toggle("active", isPractice);
+        el.tabHistory.classList.toggle("active", isHistory);
+        el.practiceSection.classList.toggle("hidden", !isPractice);
+        el.historySection.classList.toggle("hidden", !isHistory);
+      }
+
+      // ========== 事件綁定 ==========
+      function bindEvents() {
+        el.tabPractice.addEventListener("click", function() { switchTab("practice"); });
+        el.tabHistory.addEventListener("click", function() { switchTab("history"); });
+
+        el.modeBtns.forEach(function(btn) {
+          btn.addEventListener("click", function() {
+            onModeClick(btn.getAttribute("data-mode"));
+          });
+        });
+
+        el.knowBtn.addEventListener("click", function() { afterAssessment(true); });
+        el.dontKnowBtn.addEventListener("click", function() { afterAssessment(false); });
+
+        el.scopeBtns.forEach(function(btn) {
+          btn.addEventListener("click", function() {
+            state.reviewScope = btn.getAttribute("data-scope") || "review";
+            el.scopeBtns.forEach(function(b) { b.classList.toggle("active", b === btn); });
+            chooseNextCard();
+            paintCurrentCard();
+            updateStats();
+            toast("切換至：" + (state.reviewScope === "review" ? "待複習加強" : state.reviewScope === "smart" ? "智慧排序" : "全部隨機"), "");
+          });
+        });
+
+        el.resetCategoryBtn.addEventListener("click", resetCategoryProgress);
+
+        if (el.logoutBtn) {
+          el.logoutBtn.addEventListener("click", logout);
+        }
+
+        el.saveStudentBtn.addEventListener("click", async function() {
+          if (!state.serverApiUrl) {
+            await fetchServerConfig();
+          }
+          if (!state.serverApiUrl) {
+            alert('無法連線到伺服器，請檢查網路或伺服器狀態。');
+            return;
+          }
+
+          var form = el.formSelect.value;
+          var cls = el.classSelect.value;
+          var num = el.numberSelect.value;
+          var studentId = form + cls + num;
+          var password = el.passwordInput.value.trim();
+
+          if (!password) {
+            alert('請輸入密碼');
+            return;
+          }
+
+          try {
+            var result = await apiCallPost({
+              action: 'verifyStudent',
+              studentId: studentId,
+              password: password
+            });
+            if (result.ok) {
+              state.studentId = studentId;
+              setCookie(COOKIE_STUDENT, studentId, 365);
+              updateStudentLabel();
+              el.studentOverlay.classList.add('hidden');
+              if (!state.serverApiUrl) await fetchServerConfig();
+              await loadCardsAndProgress();
+            } else {
+              alert('登入失敗：' + (result.error || '請檢查帳號與密碼'));
+            }
+          } catch (e) {
+            alert('登入失敗：' + e.message);
+          }
+        });
+
+        el.clearAllHistoryBtn.addEventListener("click", clearAllHistory);
+
+        document.addEventListener("keydown", handleKeyDown);
+
+        window.addEventListener("online", function() {
+          setOnlineChip();
+          if (state.historyDirty) {
+            syncHistoryToServer();
+          }
+        });
+        window.addEventListener("offline", setOnlineChip);
+      }
+
+      // ========== 切換輸入法（保存模式） ==========
+      function onModeClick(mode) {
+        state.mode = mode;
+        el.modeBtns.forEach(function(btn) {
+          btn.classList.toggle("active", btn.getAttribute("data-mode") === mode);
+        });
+        renderKeyboard();
+        state.typed = "";
+        state.lastCheck = null;
+        renderTyped();
+        el.knowBtn.disabled = true;
+        el.dontKnowBtn.disabled = true;
+        toast("已切換輸入法：" + (mode === "cangjie" ? "倉頡" : (mode === "quick" ? "速成" : "拼音")), "");
+        localStorage.setItem(STORAGE_MODE, mode);
+      }
+
+      // ========== 啟動 ==========
+      async function bootstrap() {
+        var savedMode = localStorage.getItem(STORAGE_MODE);
+        if (savedMode && ['cangjie','quick','pinyin'].indexOf(savedMode) !== -1) {
+          state.mode = savedMode;
+        }
+
+        setOnlineChip();
+        renderKeyboard();
+        renderTyped();
+        renderHistory();
+        bindEvents();
+
+        el.modeBtns.forEach(function(btn) {
+          btn.classList.toggle("active", btn.getAttribute("data-mode") === state.mode);
+        });
+
+        var savedId = getCookie(COOKIE_STUDENT);
+        if (savedId) {
+          state.studentId = savedId;
+          updateStudentLabel();
+          el.studentOverlay.classList.add("hidden");
+          await fetchServerConfig();
+          await loadCardsAndProgress();
+        } else {
+          el.studentOverlay.classList.remove("hidden");
+          updateStudentLabel();
+        }
+
+        setInterval(function() {
+          if (state.historyDirty) {
+            syncHistoryToServer();
+          }
+          setOnlineChip();
+        }, SYNC_INTERVAL);
+      }
+
+      bootstrap();
+    })();
+  </script>
+</body>
+</html>

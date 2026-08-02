@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>教師管理 · 字卡訓練器</title>
+  <script src="dict-data.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: #f0f2f5;
+      color: #1e2a2f;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 30px 20px;
+    }
+    .app {
+      width: 100%;
+      max-width: 900px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      padding: 30px 35px;
+      margin-top: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    h1 {
+      font-size: 28px;
+    }
+    .sub {
+      font-size: 14px;
+      color: #888;
+      font-weight: normal;
+      margin-left: 10px;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .chip {
+      display: inline-block;
+      background: #eef2f6;
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 13px;
+      color: #2c3e50;
+    }
+    .chip.ok {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .chip.warn {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn.primary {
+      background: #0f766e;
+      color: #fff;
+    }
+    .btn.primary:hover {
+      background: #0d5f58;
+    }
+    .btn.secondary {
+      background: #e8ecf1;
+      color: #2c3e50;
+    }
+    .btn.secondary:hover {
+      background: #d5dce6;
+    }
+    .btn.warning {
+      background: #f59e0b;
+      color: #1f2937;
+    }
+    .btn.warning:hover {
+      background: #d48c0a;
+    }
+    .btn.danger {
+      background: #dc2626;
+      color: #fff;
+    }
+    .btn.danger:hover {
+      background: #b91c1c;
+    }
+    .btn.small {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+    .logout-btn {
+      border: 1px solid #dc2626;
+      color: #dc2626;
+      background: #fff;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .logout-btn:hover {
+      background: #fee2e2;
+    }
+    hr {
+      border: 0;
+      border-top: 1px solid #e5e9f0;
+      margin: 24px 0;
+    }
+    .field {
+      margin-bottom: 18px;
+    }
+    .field label {
+      display: block;
+      font-weight: 700;
+      font-size: 14px;
+      color: #34495e;
+      margin-bottom: 5px;
+    }
+    input[type="text"],
+    input[type="password"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #d0d7de;
+      border-radius: 10px;
+      font-size: 14px;
+      background: #fafbfc;
+      transition: border 0.2s;
+    }
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #0f766e;
+      outline: none;
+      background: #fff;
+    }
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .login-box {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 30px 0;
+    }
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .login-box .field {
+      margin-bottom: 15px;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .unknown-list {
+      border: 1px solid #d0d7de;
+      border-radius: 10px;
+      padding: 8px;
+      background: #f8fafc;
+      max-height: 220px;
+      overflow: auto;
+      margin-bottom: 8px;
+    }
+    .unknown-item {
+      display: grid;
+      grid-template-columns: 32px 1fr 1fr 1fr;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .unknown-item span {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .unknown-item input {
+      min-width: 0;
+      padding: 7px 8px;
+      font-size: 13px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+    }
+    .spinner-wrap {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .spinner-wrap.show {
+      display: flex;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #dbe1e6;
+      border-top-color: #0f766e;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .small {
+      font-size: 13px;
+      color: #6b7a88;
+      margin-top: 4px;
+    }
+    @media (max-width: 640px) {
+      .app {
+        padding: 20px 15px;
+      }
+      .row2 {
+        grid-template-columns: 1fr 1fr;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      .header {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="title-row">
+        <h1>🧑‍🏫 教師管理 <span class="sub">字卡訓練器</span></h1>
+      </div>
+      <div class="user-info">
+        <span id="teacherLabel" class="chip">未登入</span>
+        <button id="logoutBtn" class="logout-btn" style="display:none;">登出</button>
+      </div>
+    </div>
+
+    <!-- 登入區塊 -->
+    <div id="loginBox" class="login-box">
+      <h2>教師登入</h2>
+      <div class="field">
+        <label>帳號</label>
+        <input id="teacherUserInput" type="text" placeholder="請輸入教師帳號" />
+      </div>
+      <div class="field">
+        <label>密碼</label>
+        <input id="teacherPassInput" type="password" placeholder="請輸入密碼" />
+      </div>
+      <button id="loginBtn" class="btn primary" style="width:100%;">登入</button>
+      <div class="small" style="margin-top:8px;text-align:center;"></div>
+    </div>
+
+    <!-- 管理內容 -->
+    <div id="adminContent" class="hidden">
+      <!-- 按分類更新字卡 -->
+      <div class="field">
+        <label>📂 按分類更新字卡</label>
+        <div class="row2" style="margin-bottom:8px;">
+          <select id="categorySelectForUpload" class="btn secondary" style="border:1px solid #d0d7de;border-radius:10px;padding:8px;font-size:14px;"></select>
+          <button id="loadCategoryCardsBtn" class="btn secondary">載入該分類卡片</button>
+          <button id="deleteCategoryBtn" class="btn danger" disabled>刪除此分類</button>
+        </div>
+        <textarea id="categoryCardsTextarea" placeholder='該分類的卡片 JSON 陣列' style="min-height:100px;"></textarea>
+        <button id="uploadCategoryBtn" class="btn warning" style="margin-top:6px;" disabled>⬆ 上傳此分類（替換）</button>
+        <div class="small" id="ownerInfo">載入分類後會顯示擁有者權限</div>
+      </div>
+
+      <hr />
+
+      <!-- 文章轉字卡 -->
+      <div class="field">
+        <label>📝 文章轉字卡</label>
+        <textarea id="articleTextarea" placeholder="貼上中文文章，系統會抽取不重複中文字，自動查字典並產生字卡"></textarea>
+        <div class="row2" style="margin-top:6px;">
+          <input id="articleCategoryInput" type="text" placeholder="指定分類（預設：文章）" style="border:1px solid #d0d7de;border-radius:10px;padding:8px;font-size:14px;" />
+        </div>
+        <button id="convertArticleBtn" class="btn secondary" style="margin-top:6px;">轉換文章為字卡</button>
+        <div id="unknownWrap" class="hidden" style="margin-top:10px;">
+          <div class="small" style="margin-bottom:6px;">以下字元未命中字典，請補上倉頡/速成/拼音後合併：</div>
+          <div id="unknownList" class="unknown-list"></div>
+          <button id="mergeUnknownBtn" class="btn warning">合併缺字並更新結果</button>
+        </div>
+        <div class="field" style="margin-top:10px;">
+          <label>轉換結果 JSON</label>
+          <textarea id="generatedCardsTextarea" placeholder="文章轉換後的字卡 JSON 會顯示在這裡"></textarea>
+        </div>
+        <div class="row2">
+          <button id="useGeneratedBtn" class="btn secondary">套用到上方上傳區</button>
+          <button id="uploadGeneratedBtn" class="btn primary">直接上傳轉換結果（按分類）</button>
+        </div>
+        <div class="small">會從內建字典查找編碼，缺字可手動補齊。按分類上傳只替換該分類。</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="spinnerWrap" class="spinner-wrap">
+    <div class="spinner" aria-label="loading"></div>
+  </div>
+
+  <script>
+    (function() {
+      "use strict";
+
+      const API_BASE = "https://script.google.com/macros/s/AKfycbyuiEUIns8pJ-9QE58sr2HOwU0ZRUNc1yloY8_tpJWbdtA_vnPumyUT2wYZ4yGN2TTo6w/exec";
+      const TEACHER_SESSION_KEY = "teacher_session";
+
+      var el = {
+        loginBox: document.getElementById('loginBox'),
+        adminContent: document.getElementById('adminContent'),
+        teacherUserInput: document.getElementById('teacherUserInput'),
+        teacherPassInput: document.getElementById('teacherPassInput'),
+        loginBtn: document.getElementById('loginBtn'),
+        logoutBtn: document.getElementById('logoutBtn'),
+        teacherLabel: document.getElementById('teacherLabel'),
+        categorySelectForUpload: document.getElementById('categorySelectForUpload'),
+        loadCategoryCardsBtn: document.getElementById('loadCategoryCardsBtn'),
+        deleteCategoryBtn: document.getElementById('deleteCategoryBtn'),
+        categoryCardsTextarea: document.getElementById('categoryCardsTextarea'),
+        uploadCategoryBtn: document.getElementById('uploadCategoryBtn'),
+        ownerInfo: document.getElementById('ownerInfo'),
+        articleTextarea: document.getElementById('articleTextarea'),
+        articleCategoryInput: document.getElementById('articleCategoryInput'),
+        convertArticleBtn: document.getElementById('convertArticleBtn'),
+        unknownWrap: document.getElementById('unknownWrap'),
+        unknownList: document.getElementById('unknownList'),
+        mergeUnknownBtn: document.getElementById('mergeUnknownBtn'),
+        generatedCardsTextarea: document.getElementById('generatedCardsTextarea'),
+        useGeneratedBtn: document.getElementById('useGeneratedBtn'),
+        uploadGeneratedBtn: document.getElementById('uploadGeneratedBtn'),
+        spinnerWrap: document.getElementById('spinnerWrap')
+      };
+
+      var state = {
+        cards: [],
+        allCategories: [],
+        categoryCardCount: {},
+        articleAutoCards: [],
+        articleUnknownChars: [],
+        generatedCards: [],
+        currentTeacher: '',
+        currentCategoryOwner: null
+      };
+
+      // ----- 會話管理 -----
+      function saveTeacherSession(username) {
+        if (username) localStorage.setItem(TEACHER_SESSION_KEY, username);
+        else localStorage.removeItem(TEACHER_SESSION_KEY);
+      }
+      function getTeacherSession() { return localStorage.getItem(TEACHER_SESSION_KEY) || ''; }
+      function clearTeacherSession() { localStorage.removeItem(TEACHER_SESSION_KEY); }
+
+      // ----- 更新使用者標籤 -----
+      function updateTeacherLabel() {
+        if (state.currentTeacher) {
+          el.teacherLabel.textContent = '教師：' + state.currentTeacher;
+          el.teacherLabel.className = 'chip ok';
+          el.logoutBtn.style.display = 'inline-block';
+        } else {
+          el.teacherLabel.textContent = '未登入';
+          el.teacherLabel.className = 'chip';
+          el.logoutBtn.style.display = 'none';
+        }
+      }
+
+      // ----- 工具 -----
+      function showSpinner() { el.spinnerWrap.classList.add('show'); }
+      function hideSpinner() { el.spinnerWrap.classList.remove('show'); }
+      function toast(msg) { alert(msg); }
+      function sanitizeText(s) { return String(s || "").trim(); }
+
+      // ----- API -----
+      async function apiCallPost(payload, options) {
+        var silent = !!(options && options.silent);
+        var url = API_BASE + '/';
+        if (!silent) showSpinner();
+        try {
+          var res = await fetch(url, {
+            method: "POST",
+            mode: "cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) {
+            throw new Error("API 請求失敗：" + res.status);
+          }
+          var json = await res.json();
+          if (!json.ok) throw new Error(json.error || "雲端回傳失敗");
+          return json;
+        } catch (e) {
+          throw e;
+        } finally {
+          if (!silent) hideSpinner();
+        }
+      }
+
+      async function apiCallGet(action, params) {
+        var query = new URLSearchParams({ action: action, ...params });
+        var url = API_BASE + '/?' + query.toString();
+        showSpinner();
+        try {
+          var res = await fetch(url, { method: "GET", mode: "cors" });
+          if (!res.ok) throw new Error("GET 失敗：" + res.status);
+          var json = await res.json();
+          if (!json.ok) throw new Error(json.error || "雲端回傳失敗");
+          return json;
+        } finally {
+          hideSpinner();
+        }
+      }
+
+      // ----- 教師驗證 -----
+      async function verifyTeacher(username, password) {
+        return await apiCallPost({
+          action: 'verifyTeacher',
+          username: username,
+          password: password
+        });
+      }
+
+      // ----- 載入卡片 -----
+      async function loadCards() {
+        try {
+          var result = await apiCallGet("getCards");
+          state.cards = (result.cards || []).map(function(c) {
+            if (!c.category) c.category = "未分類";
+            return c;
+          });
+          var info = extractCategories(state.cards);
+          state.allCategories = info.names;
+          state.categoryCardCount = info.counts;
+          refreshCategoryUI();
+          await checkCategoryOwner();
+        } catch (e) {
+          toast("載入字卡失敗：" + e.message);
+        }
+      }
+
+      function extractCategories(cards) {
+        var set = {};
+        cards.forEach(function(c) {
+          var cat = (c.category || "未分類").trim() || "未分類";
+          set[cat] = (set[cat] || 0) + 1;
+        });
+        var names = Object.keys(set).sort();
+        var counts = {};
+        names.forEach(function(n) { counts[n] = set[n]; });
+        return { names: names, counts: counts };
+      }
+
+      async function checkCategoryOwner() {
+        var category = el.categorySelectForUpload.value;
+        if (!category) {
+          state.currentCategoryOwner = null;
+          updatePermissionUI(null);
+          return;
+        }
+        try {
+          var result = await apiCallGet('getCategoryOwner', { category: category });
+          var owner = result.owner || null;
+          state.currentCategoryOwner = owner;
+          updatePermissionUI(owner);
+        } catch (e) {
+          console.warn('無法獲取分類擁有者', e);
+          state.currentCategoryOwner = null;
+          updatePermissionUI(null);
+        }
+      }
+
+      function updatePermissionUI(owner) {
+        var isOwner = (owner === state.currentTeacher);
+        el.deleteCategoryBtn.disabled = !isOwner;
+        el.uploadCategoryBtn.disabled = !isOwner;
+        if (owner) {
+          if (isOwner) {
+            el.ownerInfo.textContent = '✅ 您擁有此分類的編輯權限。';
+            el.ownerInfo.style.color = '#065f46';
+          } else {
+            el.ownerInfo.textContent = '⛔ 此分類由 ' + owner + ' 創建，您無權修改。';
+            el.ownerInfo.style.color = '#dc2626';
+          }
+        } else {
+          el.ownerInfo.textContent = '此分類尚未指定擁有者，您將成為擁有者（上傳後）。';
+          el.ownerInfo.style.color = '#6b7a88';
+          el.deleteCategoryBtn.disabled = false;
+          el.uploadCategoryBtn.disabled = false;
+        }
+      }
+
+      function refreshCategoryUI() {
+        var cats = state.allCategories;
+        var counts = state.categoryCardCount || {};
+        var sel = el.categorySelectForUpload;
+        var currentVal = sel.value;
+        sel.innerHTML = "";
+        cats.forEach(function(cat) {
+          var opt = document.createElement("option");
+          opt.value = cat;
+          opt.textContent = cat + " (" + (counts[cat] || 0) + ")";
+          sel.appendChild(opt);
+        });
+        if (cats.length && cats.indexOf(currentVal) !== -1) {
+          sel.value = currentVal;
+        } else if (cats.length) {
+          sel.value = cats[0];
+        }
+        if (!cats.length) {
+          el.categoryCardsTextarea.value = '';
+        }
+        checkCategoryOwner();
+      }
+
+      function loadCategoryCards() {
+        var category = el.categorySelectForUpload.value;
+        if (!category) { alert("請選擇分類"); return; }
+        var cards = state.cards.filter(function(c) { return (c.category || "未分類") === category; });
+        if (!cards.length) {
+          el.categoryCardsTextarea.value = "[]";
+          toast("該分類尚無卡片");
+          return;
+        }
+        el.categoryCardsTextarea.value = JSON.stringify(cards, null, 2);
+      }
+
+      // ----- 上傳字卡（含教師帳號） -----
+      function normalizeCard(raw) {
+        var c = raw || {};
+        return {
+          character: sanitizeText(c.character),
+          explanation: sanitizeText(c.explanation || ""),
+          cangjie: sanitizeText(c.cangjie || ""),
+          quick: sanitizeText(c.quick || ""),
+          pinyin: sanitizeText(c.pinyin || ""),
+          category: sanitizeText(c.category) || "未分類"
+        };
+      }
+
+      function parseCardsJson(text) {
+        var arr = JSON.parse(text);
+        if (!Array.isArray(arr)) throw new Error("JSON 必須是陣列");
+        return arr.map(normalizeCard).filter(function(c) { return c.character; });
+      }
+
+      async function uploadCards(cards, category) {
+        var payload = {
+          action: "uploadCards",
+          cards: cards,
+          teacher: state.currentTeacher
+        };
+        if (category) payload.category = category;
+        return await apiCallPost(payload);
+      }
+
+      async function uploadCategory() {
+        var category = el.categorySelectForUpload.value;
+        if (!category) { alert("請先選擇分類"); return; }
+        if (state.currentCategoryOwner && state.currentCategoryOwner !== state.currentTeacher) {
+          alert('您沒有權限修改此分類。');
+          return;
+        }
+        try {
+          var cards = parseCardsJson(el.categoryCardsTextarea.value || "[]");
+          if (!cards.length) {
+            if (!confirm('該分類的卡片 JSON 為空陣列，確定要刪除整個分類「' + category + '」嗎？')) return;
+          }
+          cards.forEach(function(c) { if (!c.category) c.category = category; });
+          var result = await uploadCards(cards, category);
+          if (result.ok) {
+            alert("已上傳分類「" + category + "」共 " + cards.length + " 筆字卡。");
+            await loadCards();
+            var sel = el.categorySelectForUpload;
+            for (var i = 0; i < sel.options.length; i++) {
+              if (sel.options[i].value === category) { sel.value = category; break; }
+            }
+          }
+        } catch (e) {
+          alert("上傳失敗：" + e.message);
+        }
+      }
+
+      async function deleteCategory() {
+        var category = el.categorySelectForUpload.value;
+        if (!category) { alert("請先選擇分類"); return; }
+        if (state.currentCategoryOwner && state.currentCategoryOwner !== state.currentTeacher) {
+          alert('您沒有權限刪除此分類。');
+          return;
+        }
+        if (!confirm("確定要刪除整個分類「" + category + "」及其所有卡片嗎？此操作無法復原！")) return;
+        try {
+          var result = await uploadCards([], category);
+          if (result.ok) {
+            alert("分類「" + category + "」已刪除。");
+            await loadCards();
+            var sel = el.categorySelectForUpload;
+            if (sel.options.length) sel.value = sel.options[0].value;
+          }
+        } catch (e) {
+          alert("刪除失敗：" + e.message);
+        }
+      }
+
+      // ----- 文章轉字卡 -----
+      function uniqueChars(arr) {
+        var seen = {};
+        var out = [];
+        arr.forEach(function(x) {
+          if (!seen[x]) { seen[x] = true; out.push(x); }
+        });
+        return out;
+      }
+
+      function extractUniqueChineseChars(article) {
+        var chars = article.match(/[\u4E00-\u9FFF]/g) || [];
+        return uniqueChars(chars);
+      }
+
+      function getBuiltinDict() {
+        if (typeof window.BUILTIN_DICT !== 'undefined') {
+          return window.BUILTIN_DICT;
+        }
+        return {};
+      }
+
+      function deriveQuick(cangjie) {
+        var n = cangjie.replace(/[^A-Za-z]/g, "").toUpperCase();
+        if (!n) return "";
+        if (n.length <= 2) return n;
+        return n[0] + n[n.length - 1];
+      }
+
+      function convertArticleToCards() {
+        var article = el.articleTextarea.value || "";
+        var category = sanitizeText(el.articleCategoryInput.value) || "文章";
+        var chars = extractUniqueChineseChars(article);
+        if (!chars.length) {
+          alert("文章中找不到中文字符");
+          return;
+        }
+
+        var dict = getBuiltinDict();
+        var cards = [];
+        var unknown = [];
+
+        chars.forEach(function(ch) {
+          var item = dict[ch];
+          if (item && (item.cangjie || item.quick || item.pinyin)) {
+            var cangjie = sanitizeText(item.cangjie || "");
+            var quick = sanitizeText(item.quick || deriveQuick(cangjie));
+            var pinyin = sanitizeText(item.pinyin || "");
+            cards.push({
+              character: ch,
+              cangjie: cangjie,
+              quick: quick,
+              pinyin: pinyin,
+              category: category
+            });
+          } else {
+            unknown.push(ch);
+          }
+        });
+
+        state.articleAutoCards = cards;
+        state.articleUnknownChars = unknown;
+        state.generatedCards = cards.slice();
+
+        el.generatedCardsTextarea.value = JSON.stringify(state.generatedCards, null, 2);
+        renderUnknownChars(unknown);
+
+        if (unknown.length) {
+          alert("轉換完成，仍有 " + unknown.length + " 個缺字需補碼。");
+          el.unknownWrap.classList.remove("hidden");
+        } else {
+          alert("轉換完成，全部字元已命中字典。分類：" + category);
+          el.unknownWrap.classList.add("hidden");
+        }
+      }
+
+      function renderUnknownChars(chars) {
+        el.unknownList.innerHTML = "";
+        if (!chars.length) {
+          el.unknownWrap.classList.add("hidden");
+          return;
+        }
+        el.unknownWrap.classList.remove("hidden");
+        chars.forEach(function(ch) {
+          var row = document.createElement("div");
+          row.className = "unknown-item";
+          row.setAttribute("data-char", ch);
+          var s = document.createElement("span");
+          s.textContent = ch;
+          var i1 = document.createElement("input");
+          i1.placeholder = "倉頡";
+          i1.className = "u-cj";
+          var i2 = document.createElement("input");
+          i2.placeholder = "速成";
+          i2.className = "u-qk";
+          var i3 = document.createElement("input");
+          i3.placeholder = "拼音";
+          i3.className = "u-py";
+          row.appendChild(s);
+          row.appendChild(i1);
+          row.appendChild(i2);
+          row.appendChild(i3);
+          el.unknownList.appendChild(row);
+        });
+      }
+
+      function mergeUnknownAndRegenerate() {
+        var rows = [].slice.call(el.unknownList.querySelectorAll(".unknown-item"));
+        var merged = state.articleAutoCards.slice();
+        var category = sanitizeText(el.articleCategoryInput.value) || "文章";
+
+        rows.forEach(function(row) {
+          var ch = row.getAttribute("data-char");
+          var cj = sanitizeText(row.querySelector(".u-cj").value);
+          var qk = sanitizeText(row.querySelector(".u-qk").value || deriveQuick(cj));
+          var py = sanitizeText(row.querySelector(".u-py").value).toLowerCase();
+          if (!cj && !py) return;
+          merged.push({
+            character: ch,
+            cangjie: cj,
+            quick: qk,
+            pinyin: py,
+            category: category
+          });
+        });
+
+        state.generatedCards = merged.map(normalizeCard).filter(function(c) { return c.character; });
+        el.generatedCardsTextarea.value = JSON.stringify(state.generatedCards, null, 2);
+        el.unknownWrap.classList.add("hidden");
+        alert("已合併缺字，共 " + state.generatedCards.length + " 張字卡。");
+      }
+
+      function useGeneratedToUpload() {
+        el.categoryCardsTextarea.value = el.generatedCardsTextarea.value;
+        var cat = sanitizeText(el.articleCategoryInput.value) || "文章";
+        var sel = el.categorySelectForUpload;
+        for (var i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value === cat) {
+            sel.value = cat;
+            break;
+          }
+        }
+        checkCategoryOwner();
+      }
+
+      async function uploadGenerated() {
+        var category = sanitizeText(el.articleCategoryInput.value) || "文章";
+        if (state.currentCategoryOwner && state.currentCategoryOwner !== state.currentTeacher) {
+          alert('您沒有權限修改此分類。');
+          return;
+        }
+        try {
+          var cards = parseCardsJson(el.generatedCardsTextarea.value || "[]");
+          if (!cards.length) { alert("沒有可上傳的字卡"); return; }
+          cards.forEach(function(c) { if (!c.category) c.category = category; });
+          var result = await uploadCards(cards, category);
+          if (result.ok) {
+            alert("轉換結果已上傳，分類「" + category + "」，共 " + cards.length + " 筆");
+            await loadCards();
+          }
+        } catch (e) {
+          alert("上傳失敗：" + e.message);
+        }
+      }
+
+      // ----- 登入 / 登出 -----
+      function login() {
+        var username = sanitizeText(el.teacherUserInput.value);
+        var password = sanitizeText(el.teacherPassInput.value);
+        if (!username || !password) {
+          alert("請輸入帳號與密碼");
+          return;
+        }
+        verifyTeacher(username, password)
+          .then(function(result) {
+            if (result.ok) {
+              state.currentTeacher = username;
+              saveTeacherSession(username);
+              updateTeacherLabel();
+              el.loginBox.classList.add("hidden");
+              el.adminContent.classList.remove("hidden");
+              loadCards();
+            } else {
+              alert("登入失敗：" + (result.error || "帳號或密碼錯誤"));
+            }
+          })
+          .catch(function(e) {
+            alert("登入失敗：" + e.message);
+          });
+      }
+
+      function logout() {
+        state.currentTeacher = '';
+        clearTeacherSession();
+        updateTeacherLabel();
+        el.adminContent.classList.add("hidden");
+        el.loginBox.classList.remove("hidden");
+        el.teacherUserInput.value = "";
+        el.teacherPassInput.value = "";
+        state.cards = [];
+        state.allCategories = [];
+        state.categoryCardCount = {};
+        refreshCategoryUI();
+        el.articleTextarea.value = "";
+        el.articleCategoryInput.value = "";
+        el.generatedCardsTextarea.value = "";
+        el.unknownWrap.classList.add("hidden");
+        el.unknownList.innerHTML = "";
+        el.deleteCategoryBtn.disabled = true;
+        el.uploadCategoryBtn.disabled = true;
+        el.ownerInfo.textContent = '請登入後操作';
+      }
+
+      function tryRestoreSession() {
+        var saved = getTeacherSession();
+        if (saved) {
+          state.currentTeacher = saved;
+          updateTeacherLabel();
+          el.loginBox.classList.add("hidden");
+          el.adminContent.classList.remove("hidden");
+          loadCards();
+          return true;
+        }
+        return false;
+      }
+
+      // ----- 事件綁定 -----
+      function bindEvents() {
+        el.loginBtn.addEventListener("click", login);
+        el.logoutBtn.addEventListener("click", logout);
+        el.loadCategoryCardsBtn.addEventListener("click", loadCategoryCards);
+        el.deleteCategoryBtn.addEventListener("click", deleteCategory);
+        el.uploadCategoryBtn.addEventListener("click", uploadCategory);
+        el.categorySelectForUpload.addEventListener("change", function() {
+          checkCategoryOwner();
+        });
+
+        el.convertArticleBtn.addEventListener("click", convertArticleToCards);
+        el.mergeUnknownBtn.addEventListener("click", mergeUnknownAndRegenerate);
+        el.useGeneratedBtn.addEventListener("click", useGeneratedToUpload);
+        el.uploadGeneratedBtn.addEventListener("click", uploadGenerated);
+
+        el.teacherPassInput.addEventListener("keydown", function(e) {
+          if (e.key === "Enter") login();
+        });
+        el.teacherUserInput.addEventListener("keydown", function(e) {
+          if (e.key === "Enter") login();
+        });
+
+        // 移除所有 online/offline 監聽
+      }
+
+      // ----- 啟動 -----
+      bindEvents();
+
+      if (!tryRestoreSession()) {
+        el.loginBox.classList.remove("hidden");
+        el.adminContent.classList.add("hidden");
+        updateTeacherLabel();
+      }
+    })();
+  </script>
+</body>
+</html>
