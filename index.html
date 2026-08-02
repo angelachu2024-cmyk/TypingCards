@@ -1136,18 +1136,17 @@
       }
 
       async function apiCallPost(payload, options) {
-        var api = state.serverApiUrl;
         var silent = !!(options && options.silent);
-        if (!api) throw new Error("尚未從伺服器取得 API 位址");
+        var url = API_BASE;
         if (!silent) showSpinner();
         try {
-          var res = await fetch(api, {
+          var res = await fetch(url, {
             method: "POST",
             mode: "cors",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "text/plain" },
             body: JSON.stringify(payload)
           });
-          if (!res.ok) throw new Error("POST 失敗：" + res.status);
+          if (!res.ok) throw new Error("請求失敗：" + res.status);
           var json = await res.json();
           if (!json.ok) throw new Error(json.error || "雲端回傳失敗");
           return json;
