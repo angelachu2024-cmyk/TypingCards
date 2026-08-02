@@ -1525,7 +1525,7 @@
           state.studentId = savedId;
           updateStudentLabel();
           el.studentOverlay.classList.add("hidden");
-          await fetchServerConfig();
+          state.serverApiUrl = "https://script.google.com/macros/s/AKfycbyuiEUIns8pJ-9QE58sr2HOwU0ZRUNc1yloY8_tpJWbdtA_vnPumyUT2wYZ4yGN2TTo6w/exec";
           await loadCardsAndProgress();
         } else {
           el.studentOverlay.classList.remove("hidden");
